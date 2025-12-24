@@ -12,7 +12,7 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-ARTIFACT_ID=$(echo "$1" | sed 's/[-_].*//')
+ARTIFACT_ID=$(echo "$1" | sed 's/-/_/g')
 BASE_PACKAGE="com.kaiqkt.$ARTIFACT_ID"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
