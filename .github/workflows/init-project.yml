@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  administration: write
 
 jobs:
   init:
@@ -24,64 +25,17 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Copy branch rulesets from template
-        env:
-          SOURCE_REPO: kaiqkt/kt-template-api
-          TARGET_REPO: ${{ github.repository }}
-        run: |
-          set -e
-
-          echo "Copying rulesets"
-          echo "Source (template): $SOURCE_REPO"
-          echo "Target (current repo): $TARGET_REPO"
-          echo
-
-          RESPONSE=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            repos/$SOURCE_REPO/rulesets)
-
-          COUNT=$(echo "$RESPONSE" | jq '.total_count')
-
-          if [ "$COUNT" -eq 0 ]; then
-            echo "No rulesets found in source repository"
-          else
-            echo "Found $COUNT rulesets"
-            echo
-
-            echo "$RESPONSE" | jq -c '.rulesets[]' | while read -r RULESET; do
-              NAME=$(echo "$RULESET" | jq -r '.name')
-
-              echo "Creating ruleset: $NAME"
-
-              PAYLOAD=$(echo "$RULESET" | jq 'del(
-                .id,
-                .node_id,
-                .source_type,
-                .source,
-                .created_at,
-                .updated_at,
-                ._links
-              )')
-
-              gh api \
-                -X POST \
-                -H "Accept: application/vnd.github+json" \
-                repos/$TARGET_REPO/rulesets \
-                --input <(echo "$PAYLOAD")
-
-              echo "Ruleset '$NAME' created"
-              echo
-            done
-          fi
-
-      - name: Run init script
+      - name: Initialize project files
         run: |
           chmod +x .github/scripts/init.sh
 
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
-          echo "Initializing project with artifact-id: $REPO_NAME"
-
           .github/scripts/init.sh "$REPO_NAME"
+
+      - name: Copy branch rulesets from template
+        run: |
+          chmod +x .github/scripts/copy-rulesets.sh
+          .github/scripts/copy-rulesets.sh
 
       - name: Commit initialization changes
         run: |
@@ -91,13 +45,14 @@ jobs:
           git add .
           git commit -m "Initialize project from template" || echo "Nothing to commit"
 
-      - name: Remove bootstrap workflow and script
+      - name: Remove initialization workflow and scripts
         run: |
-          rm -f .github/workflows/init-from-template.yml
+          rm -f .github/workflows/init-project.yml
           rm -f .github/scripts/init.sh
+          rm -f .github/scripts/copy-rulesets.sh
 
-          git add .github/workflows/init-from-template.yml .github/scripts/init.sh
-          git commit -m "Remove initialization workflow and script" || echo "Nothing to commit"
+          git add .github/workflows/init-project.yml .github/scripts
+          git commit -m "Remove initialization workflow and scripts" || echo "Nothing to commit"
 
       - name: Push changes
         run: |
