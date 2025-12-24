@@ -1,3 +1,4 @@
+- [ ] Add test, build e build image worflows
 - [ ] Create a readme.md
 - [ ] Create branchs
   - [X] Master
