@@ -1,0 +1,50 @@
+name: Initialize project from template
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  init:
+    if: ${{ !github.event.repository.is_template }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run init script
+        run: |
+          chmod +x .github/scripts/init.sh
+
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          echo "Initializing project with artifact-id: $REPO_NAME"
+
+          .github/scripts/init.sh "$REPO_NAME"
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add .
+          git commit -m "Initialize project from template" || echo "Nothing to commit"
+
+      - name: Remove init workflow and script
+        run: |
+          rm -f .github/workflows/init-project.yml
+          rm -f .github/scripts/init.sh
+
+          git add .github/workflows/init-project.yml .github/scripts/init.sh
+          git commit -m "Remove initialization workflow and script" || echo "Nothing to commit"
+
+      - name: Push changes
+        run: |
+          git push
