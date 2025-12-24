@@ -1,1 +1,5 @@
 - [ ] Create a readme.md
+- [ ] Create branchs
+  - [X] Master
+  - [X] Develop
+- [ ] Create github actions to validate branchs rules
