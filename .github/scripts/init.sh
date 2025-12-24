@@ -8,11 +8,11 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PROJECT_ROOT"
 
 if [ -z "$1" ]; then
-  echo "Uso: $0 <artifact-id>"
   exit 1
 fi
 
-ARTIFACT_ID=$(echo "$1" | sed 's/[-_]//g')
+RAW_NAME="$1"
+ARTIFACT_ID=$(echo "$RAW_NAME" | sed 's/[-_]//g')
 BASE_PACKAGE="com.kaiqkt.$ARTIFACT_ID"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -22,7 +22,7 @@ else
 fi
 
 cat <<EOF > settings.gradle.kts
-rootProject.name = "$ARTIFACT_ID"
+rootProject.name = "$RAW_NAME"
 EOF
 
 mkdir -p src/main/resources
@@ -33,7 +33,7 @@ server:
 
 spring:
   application:
-    name: $ARTIFACT_ID
+    name: $RAW_NAME
 EOF
 
 OLD_PACKAGE="com.kaiqkt.template"
