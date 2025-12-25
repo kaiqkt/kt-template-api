@@ -31,10 +31,10 @@ jobs:
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
           .github/scripts/init.sh "$REPO_NAME"
 
-      - name: Copy branch rulesets from template
-        run: |
-          chmod +x .github/scripts/copy-rulesets.sh
-          .github/scripts/copy-rulesets.sh
+#      - name: Copy branch rulesets from template
+#        run: |
+#          chmod +x .github/scripts/copy-rulesets.sh
+#          .github/scripts/copy-rulesets.sh
 
       - name: Commit initialization changes
         run: |
