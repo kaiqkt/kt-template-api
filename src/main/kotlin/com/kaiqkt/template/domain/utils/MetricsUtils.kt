@@ -1,11 +1,15 @@
-package ${package}.domain.utils
+package $
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+
+{package}.domain.utils
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import java.util.concurrent.TimeUnit
 
 object MetricsUtils {
-    lateinit var meterRegistry: MeterRegistry
+    lateinit var meterRegistry: MeterRegistry = SimpleMeterRegistry()
 
     fun init(registry: MeterRegistry) {
         meterRegistry = registry
