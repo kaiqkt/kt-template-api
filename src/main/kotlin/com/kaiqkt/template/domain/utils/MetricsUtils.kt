@@ -9,7 +9,7 @@ import io.micrometer.core.instrument.Timer
 import java.util.concurrent.TimeUnit
 
 object MetricsUtils {
-    lateinit var meterRegistry: MeterRegistry = SimpleMeterRegistry()
+    var meterRegistry: MeterRegistry = SimpleMeterRegistry()
 
     fun init(registry: MeterRegistry) {
         meterRegistry = registry
