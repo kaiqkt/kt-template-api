@@ -1,6 +1,7 @@
 package $
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import org.springframework.stereotype.Component
 
 {package}.domain.utils
 
@@ -8,13 +9,10 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import java.util.concurrent.TimeUnit
 
-object MetricsUtils {
-    var meterRegistry: MeterRegistry = SimpleMeterRegistry()
-
-    fun init(registry: MeterRegistry) {
-        meterRegistry = registry
-    }
-
+@Component
+class MetricsUtils(
+    private val meterRegistry: MeterRegistry,
+) {
     fun counter(
         name: String,
         vararg tags: String,
