@@ -1,10 +1,7 @@
-package $
+package ${package}.domain.utils
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.springframework.stereotype.Component
-
-{package}.domain.utils
-
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import java.util.concurrent.TimeUnit
