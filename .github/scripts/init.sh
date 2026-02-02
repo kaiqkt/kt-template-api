@@ -28,12 +28,22 @@ EOF
 mkdir -p src/main/resources
 
 cat <<EOF > src/main/resources/application.yml
+---
 server:
   port: 8080
 
 spring:
   application:
     name: $RAW_NAME
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  metrics:
+    tags:
+      application: $RAW_NAME
 EOF
 
 OLD_PACKAGE="com.kaiqkt.template"

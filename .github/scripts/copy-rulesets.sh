@@ -28,15 +28,20 @@ echo "$RULESETS" | jq -c '.[]' | while read -r RULESET; do
 
   echo "➡️ Copying ruleset: $NAME (id=$ID)"
 
-  CLEANED=$(echo "$RULESET" | jq 'del(
-    .id,
-    .node_id,
-    .source,
-    .source_type,
-    .created_at,
-    .updated_at,
-    ._links
-  )')
+  CLEANED=$(echo "$RULESET" | jq '
+    del(
+      .id,
+      .node_id,
+      .source,
+      .source_type,
+      .created_at,
+      .updated_at,
+      ._links,
+      .bypass_actors,
+      .conditions.repository_name
+    )
+    | .enforcement = "active"
+  ')
 
   gh api \
     --method POST \
@@ -44,7 +49,7 @@ echo "$RULESETS" | jq -c '.[]' | while read -r RULESET; do
     /repos/$TARGET_REPO/rulesets \
     --input <(echo "$CLEANED")
 
-  echo "✅ Ruleset '$NAME' created"
+  echo "✅ Ruleset '\''$NAME'\'' created"
   echo
 done
 

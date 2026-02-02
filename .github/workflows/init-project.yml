@@ -33,6 +33,13 @@ jobs:
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
           .github/scripts/init.sh "$REPO_NAME"
 
+      - name: Copy repository rulesets from template
+        run: |
+          chmod +x .github/scripts/copy-rulesets.sh
+          .github/scripts/copy-rulesets.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Commit initialization changes
         run: |
           git config user.name "github-actions"
@@ -51,4 +58,4 @@ jobs:
           git commit -m "Remove initialization workflow and scripts" || echo "Nothing to commit"
 
       - name: Push changes
-        run: git push origin HEAD:mast
+        run: git push origin HEAD:master
