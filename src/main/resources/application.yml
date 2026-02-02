@@ -5,3 +5,12 @@ server:
 spring:
   application:
     name: ${artifactId}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  metrics:
+    tags:
+      application: ${artifactId}

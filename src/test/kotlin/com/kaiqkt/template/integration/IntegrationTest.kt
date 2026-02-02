@@ -19,16 +19,6 @@ import org.testcontainers.junit.jupiter.Testcontainers
 class IntegrationTest {
     @LocalServerPort
     var port: Int = 0
-
-    @field:Value("\${authentication.issuer}")
-    lateinit var issuer: String
-
-    @field:Value("\${authentication.access-token-ttl}")
-    lateinit var accessTokenTll: String
-
-    @field:Value("\${authentication.access-token-secret}")
-    lateinit var accessTokenSecret: String
-
     @Autowired
     lateinit var mapper: ObjectMapper
 
