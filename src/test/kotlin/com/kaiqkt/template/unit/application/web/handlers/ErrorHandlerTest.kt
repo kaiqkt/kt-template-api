@@ -2,7 +2,7 @@ package ${package}.unit.application.web.handlers
 
 import ${package}.application.exceptions.InvalidRequestException
 import ${package}.application.web.handlers.ErrorHandler
-import ${package}.application.web.responses.ErrorV1
+import ${package}.application.web.responses.ErrorResponse
 import ${package}.domain.exceptions.DomainException
 import ${package}.domain.exceptions.ErrorType
 import io.mockk.every
@@ -63,7 +63,7 @@ class ErrorHandlerTest {
                 HttpHeaders(),
                 HttpStatus.BAD_REQUEST,
                 webRequest,
-            ) as ResponseEntity<ErrorV1>
+            ) as ResponseEntity<ErrorResponse>
 
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("defaultMessage", response.body?.details?.get("field"))
@@ -87,7 +87,7 @@ class ErrorHandlerTest {
                 HttpHeaders(),
                 HttpStatus.BAD_REQUEST,
                 webRequest,
-            ) as ResponseEntity<ErrorV1>
+            ) as ResponseEntity<ErrorResponse>
 
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals("invalid", response.body?.details?.get("field"))

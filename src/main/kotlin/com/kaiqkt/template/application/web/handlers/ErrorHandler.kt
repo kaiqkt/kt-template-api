@@ -1,7 +1,7 @@
 package ${package}.application.web.handlers
 
 import ${package}.application.exceptions.InvalidRequestException
-import ${package}.application.web.responses.ErrorV1
+import ${package}.application.web.responses.ErrorResponse
 import ${package}.domain.exceptions.DomainException
 import ${package}.domain.exceptions.ErrorType
 import jakarta.validation.ConstraintViolationException
@@ -24,22 +24,22 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     }
 
     @ExceptionHandler(DomainException::class)
-    fun handleDomainException(ex: DomainException): ResponseEntity<ErrorV1> {
-        val error = ErrorV1(ex.type.name, ex.message, mapOf())
+    fun handleDomainException(ex: DomainException): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(ex.type.name, ex.message, mapOf())
 
         return ResponseEntity(error, getStatusCode(ex.type))
     }
 
     @ExceptionHandler(MissingRequestHeaderException::class)
-    fun handleMissingRequestHeaderException(ex: MissingRequestHeaderException): ResponseEntity<ErrorV1> {
-        val error = ErrorV1(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, mapOf(ex.headerName to "required header"))
+    fun handleMissingRequestHeaderException(ex: MissingRequestHeaderException): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, mapOf(ex.headerName to "required header"))
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error)
     }
 
     @ExceptionHandler(InvalidRequestException::class)
-    fun handleInvalidRequestException(ex: InvalidRequestException): ResponseEntity<ErrorV1> {
-        val error = ErrorV1(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, ex.errors)
+    fun handleInvalidRequestException(ex: InvalidRequestException): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, ex.errors)
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error)
     }
@@ -52,20 +52,20 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
     ): ResponseEntity<Any> {
         val details = ex.bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "invalid") }
 
-        val error = ErrorV1(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, details)
+        val error = ErrorResponse(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, details)
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error)
     }
 
     @ExceptionHandler(ConstraintViolationException::class)
-    fun handleConstraintViolationException(ex: ConstraintViolationException): ResponseEntity<ErrorV1> {
+    fun handleConstraintViolationException(ex: ConstraintViolationException): ResponseEntity<ErrorResponse> {
         val details =
             ex.constraintViolations.associate { v ->
                 val path = v.propertyPath.joinToString(".") { it.name }
                 path to v.message
             }
 
-        val error = ErrorV1(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, details)
+        val error = ErrorResponse(INVALID_REQUEST, INVALID_REQUEST_MESSAGE, details)
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error)
     }
