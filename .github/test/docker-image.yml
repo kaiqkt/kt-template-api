@@ -1,0 +1,103 @@
+name: Docker Image
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version info
+        id: version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const event = context.eventName;
+            const sha = context.sha.substring(0,7);
+
+            core.info(`Event: ${event}`);
+
+            // PR from release/*
+            if (event === "pull_request") {
+              const head = context.payload.pull_request.head.ref;
+
+              if (head.startsWith("release/")) {
+                const version = head.replace("release/", "");
+                core.setOutput("tag", `${version}-rc-${sha}`);
+                core.setOutput("latest", "false");
+                core.setOutput("push", "false");
+                return;
+              }
+            }
+
+            // Push to master after PR merge
+            if (event === "push") {
+              const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha
+              });
+
+              const pr = prs.data.find(pr => pr.merged_at);
+
+              if (pr && pr.head.ref.startsWith("release/")) {
+                const version = pr.head.ref.replace("release/", "");
+                core.setOutput("tag", version);
+                core.setOutput("latest", "true");
+                core.setOutput("push", "true");
+                return;
+              }
+            }
+
+            core.info("No release context detected.");
+            core.setOutput("tag", "");
+            core.setOutput("latest", "false");
+            core.setOutput("push", "false");
+
+      - name: Stop if not a release build
+        if: steps.version.outputs.tag == ''
+        run: echo "Not a release build."
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.version.outputs.tag != ''
+
+      - name: Log in to GHCR
+        if: steps.version.outputs.push == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (PR validation only)
+        if: steps.version.outputs.tag != '' && steps.version.outputs.push == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push (Release)
+        if: steps.version.outputs.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+            ${{ steps.version.outputs.latest == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
