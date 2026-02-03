@@ -1,86 +1,86 @@
-#name: Backport
-#
-#on:
-#  push:
-#    branches: [ master ]
-#
-#permissions:
-#  contents: write
-#  pull-requests: write
-#
-#jobs:
-#  backport:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-#        with:
-#          fetch-depth: 0
-#
-#      - name: Find and clean existing backport PRs
-#        uses: actions/github-script@v7
-#        with:
-#          script: |
-#            const { owner, repo } = context.repo;
-#
-#            const prs = await github.rest.pulls.list({
-#              owner,
-#              repo,
-#              state: "open",
-#              base: "develop"
-#            });
-#
-#            for (const pr of prs.data) {
-#              if (pr.head.ref.startsWith("backport/")) {
-#                core.info(`Closing existing backport PR #${pr.number} (${pr.head.ref})`);
-#
-#                await github.rest.pulls.update({
-#                  owner,
-#                  repo,
-#                  pull_number: pr.number,
-#                  state: "closed"
-#                });
-#
-#                try {
-#                  await github.rest.git.deleteRef({
-#                    owner,
-#                    repo,
-#                    ref: `heads/${pr.head.ref}`
-#                  });
-#                  core.info(`Deleted branch ${pr.head.ref}`);
-#                } catch (e) {
-#                  core.warning(`Could not delete branch ${pr.head.ref}: ${e.message}`);
-#                }
-#              }
-#            }
-#
-#      - name: Create backport branch
-#        id: branch
-#        run: |
-#          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-#          BRANCH_NAME="backport/$TIMESTAMP"
-#
-#          git config user.name "github-actions"
-#          git config user.email "github-actions@github.com"
-#
-#          git checkout -b "$BRANCH_NAME"
-#          git push origin "$BRANCH_NAME"
-#
-#          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-#
-#      - name: Create backport PR into develop
-#        uses: actions/github-script@v7
-#        with:
-#          script: |
-#            const { owner, repo } = context.repo;
-#            const branchName = "${{ steps.branch.outputs.name }}";
-#
-#            await github.rest.pulls.create({
-#              owner,
-#              repo,
-#              title: `Backport master to develop (${branchName})`,
-#              head: branchName,
-#              base: "develop",
-#              body: "Automatic backport PR created after a push to master."
-#            });
+name: Backport
+
+on:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  backport:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find and clean existing backport PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            const prs = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              base: "develop"
+            });
+
+            for (const pr of prs.data) {
+              if (pr.head.ref.startsWith("backport/")) {
+                core.info(`Closing existing backport PR #${pr.number} (${pr.head.ref})`);
+
+                await github.rest.pulls.update({
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  state: "closed"
+                });
+
+                try {
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `heads/${pr.head.ref}`
+                  });
+                  core.info(`Deleted branch ${pr.head.ref}`);
+                } catch (e) {
+                  core.warning(`Could not delete branch ${pr.head.ref}: ${e.message}`);
+                }
+              }
+            }
+
+      - name: Create backport branch
+        id: branch
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          BRANCH_NAME="backport/$TIMESTAMP"
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git checkout -b "$BRANCH_NAME"
+          git push origin "$BRANCH_NAME"
+
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create backport PR into develop
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const branchName = "${{ steps.branch.outputs.name }}";
+
+            await github.rest.pulls.create({
+              owner,
+              repo,
+              title: `Backport master to develop (${branchName})`,
+              head: branchName,
+              base: "develop",
+              body: "Automatic backport PR created after a push to master."
+            });
