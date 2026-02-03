@@ -24,14 +24,12 @@ jobs:
         run: |
           git fetch origin
 
-          # develop precisa existir
           if ! git show-ref --verify --quiet refs/remotes/origin/develop; then
             echo "Develop branch does not exist. Skipping backport."
             echo "needed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # verifica se master tem commits que develop não tem
           AHEAD=$(git rev-list --count origin/develop..origin/master)
 
           echo "Commits master ahead of develop: $AHEAD"
