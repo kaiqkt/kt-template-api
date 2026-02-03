@@ -41,6 +41,7 @@ management:
     web:
       exposure:
         include: health, prometheus
+      base-path: /
   metrics:
     tags:
       application: $RAW_NAME

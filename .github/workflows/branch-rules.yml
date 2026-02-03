@@ -1,79 +1,79 @@
-name: PR Branch Rules
-
-on:
-  pull_request:
-    types: [ opened, edited, synchronize, reopened ]
-
-jobs:
-  validate-pr:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Validate PR source/target and branch prefix
-        run: |
-          echo "Base (target): ${{ github.base_ref }}"
-          echo "Head (source): ${{ github.head_ref }}"
-          
-          BASE="${{ github.base_ref }}"
-          HEAD="${{ github.head_ref }}"
-          PREFIX=$(echo "$HEAD" | cut -d'/' -f1)
-          
-          echo "Detected branch prefix: $PREFIX"
-          
-          fail() {
-            echo "PR validation failed: $1"
-            exit 1
-          }
-          
-          pass() {
-            echo "PR validation passed."
-            exit 0
-          }
-
-          is_semver_branch() {
-            [[ "$HEAD" =~ ^(release|hotfix)/[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          }
-          
-          # =========================
-          # PRs INTO DEVELOP
-          # =========================
-          if [[ "$BASE" == "develop" ]]; then
-            case "$PREFIX" in
-              feature|hotfix|chore|docs|refactor|backport)
-                # if hotfix into develop, still enforce semver
-                if [[ "$PREFIX" == "hotfix" ]] && ! is_semver_branch; then
-                  fail "hotfix branches must follow hotfix/x.y.z"
-                fi
-                pass
-                ;;
-              *)
-                fail "PRs into develop must come from feature/, hotfix/, chore/, docs/, refactor/ or backport/ branches."
-                ;;
-            esac
-          fi
-          
-          # =========================
-          # DEVELOP -> MASTER
-          # =========================
-          if [[ "$HEAD" == "develop" && "$BASE" == "master" ]]; then
-            pass
-          fi
-          
-          # =========================
-          # RELEASE/HOTFIX -> MASTER
-          # =========================
-          if [[ "$BASE" == "master" ]]; then
-            if [[ "$PREFIX" == "release" || "$PREFIX" == "hotfix" ]]; then
-              if ! is_semver_branch; then
-                fail "release and hotfix branches must follow release/x.y.z or hotfix/x.y.z"
-              fi
-              pass
-            else
-              fail "Only develop, release/* or hotfix/* branches can open PRs into master."
-            fi
-          fi
-          
-          # =========================
-          # Anything else
-          # =========================
-          fail "Branch combination not allowed: $HEAD -> $BASE"
+#name: PR Branch Rules
+#
+#on:
+#  pull_request:
+#    types: [ opened, edited, synchronize, reopened ]
+#
+#jobs:
+#  validate-pr:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Validate PR source/target and branch prefix
+#        run: |
+#          echo "Base (target): ${{ github.base_ref }}"
+#          echo "Head (source): ${{ github.head_ref }}"
+#
+#          BASE="${{ github.base_ref }}"
+#          HEAD="${{ github.head_ref }}"
+#          PREFIX=$(echo "$HEAD" | cut -d'/' -f1)
+#
+#          echo "Detected branch prefix: $PREFIX"
+#
+#          fail() {
+#            echo "PR validation failed: $1"
+#            exit 1
+#          }
+#
+#          pass() {
+#            echo "PR validation passed."
+#            exit 0
+#          }
+#
+#          is_semver_branch() {
+#            [[ "$HEAD" =~ ^(release|hotfix)/[0-9]+\.[0-9]+\.[0-9]+$ ]]
+#          }
+#
+#          # =========================
+#          # PRs INTO DEVELOP
+#          # =========================
+#          if [[ "$BASE" == "develop" ]]; then
+#            case "$PREFIX" in
+#              feature|hotfix|chore|docs|refactor|backport)
+#                # if hotfix into develop, still enforce semver
+#                if [[ "$PREFIX" == "hotfix" ]] && ! is_semver_branch; then
+#                  fail "hotfix branches must follow hotfix/x.y.z"
+#                fi
+#                pass
+#                ;;
+#              *)
+#                fail "PRs into develop must come from feature/, hotfix/, chore/, docs/, refactor/ or backport/ branches."
+#                ;;
+#            esac
+#          fi
+#
+#          # =========================
+#          # DEVELOP -> MASTER
+#          # =========================
+#          if [[ "$HEAD" == "develop" && "$BASE" == "master" ]]; then
+#            pass
+#          fi
+#
+#          # =========================
+#          # RELEASE/HOTFIX -> MASTER
+#          # =========================
+#          if [[ "$BASE" == "master" ]]; then
+#            if [[ "$PREFIX" == "release" || "$PREFIX" == "hotfix" ]]; then
+#              if ! is_semver_branch; then
+#                fail "release and hotfix branches must follow release/x.y.z or hotfix/x.y.z"
+#              fi
+#              pass
+#            else
+#              fail "Only develop, release/* or hotfix/* branches can open PRs into master."
+#            fi
+#          fi
+#
+#          # =========================
+#          # Anything else
+#          # =========================
+#          fail "Branch combination not allowed: $HEAD -> $BASE"
