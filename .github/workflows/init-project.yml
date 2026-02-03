@@ -28,14 +28,11 @@ jobs:
           java-version: '21'
           cache: gradle
 
-      - name: Create initialization branch
+      - name: Create release branch
         id: branch
         run: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          BRANCH_NAME="chore/init-$TIMESTAMP"
-
+          BRANCH_NAME="release/0.0.1"
           git checkout -b "$BRANCH_NAME"
-
           echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Initialize project files
@@ -50,7 +47,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           git add .
-          git commit -m "chore: initialize project from template" || echo "Nothing to commit"
+          git commit -m "release: bootstrap project structure" || echo "Nothing to commit"
 
       - name: Remove initialization workflow and scripts
         run: |
@@ -61,10 +58,10 @@ jobs:
           git add -A
           git commit -m "chore: remove initialization workflow and scripts" || echo "Nothing to commit"
 
-      - name: Push initialization branch
+      - name: Push release branch
         run: git push origin "${{ steps.branch.outputs.name }}"
 
-      - name: Create PR into develop
+      - name: Create PR into master
         uses: actions/github-script@v7
         with:
           script: |
@@ -74,8 +71,8 @@ jobs:
             await github.rest.pulls.create({
               owner,
               repo,
-              title: "chore: initialize project from template",
+              title: "release: bootstrap project 0.0.1",
               head: branchName,
-              base: "develop",
-              body: "Automatic initialization PR created from repository template setup."
+              base: "master",
+              body: "Initial project bootstrap as release 0.0.1"
             });

@@ -1,78 +1,78 @@
-name: Docker Image
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  docker:
-    name: Build & Push Docker Image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Extract version info
-        id: version
-        run: |
-          echo "Event: ${{ github.event_name }}"
-          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
-
-          # Case 1 — Pull Request from release/*
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            HEAD_BRANCH="${{ github.head_ref }}"
-            if [[ "$HEAD_BRANCH" == release/* ]]; then
-              VERSION=${HEAD_BRANCH#release/}
-              echo "tag=${VERSION}-rc-${SHORT_SHA}" >> $GITHUB_OUTPUT
-              echo "latest=false" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-          fi
-
-          # Case 2 — Push to master after merging release/*
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            # Try to extract source branch from merge commit message
-            MERGE_MSG=$(git log -1 --pretty=%B)
-            echo "Merge commit message: $MERGE_MSG"
-
-            if [[ "$MERGE_MSG" =~ release/([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-              VERSION="${BASH_REMATCH[1]}"
-              echo "tag=${VERSION}" >> $GITHUB_OUTPUT
-              echo "latest=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-          fi
-
-          echo "No release context detected. Skipping Docker push."
-          echo "tag=" >> $GITHUB_OUTPUT
-          echo "latest=false" >> $GITHUB_OUTPUT
-
-      - name: Stop if not a release build
-        if: steps.version.outputs.tag == ''
-        run: |
-          echo "Not a release or release candidate build. Skipping Docker image."
-          exit 0
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & Push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
-            ${{ steps.version.outputs.latest == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+#name: Docker Image
+#
+#on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+#
+#jobs:
+#  docker:
+#    name: Build & Push Docker Image
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#      packages: write
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Extract version info
+#        id: version
+#        run: |
+#          echo "Event: ${{ github.event_name }}"
+#          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+#
+#          # Case 1 — Pull Request from release/*
+#          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+#            HEAD_BRANCH="${{ github.head_ref }}"
+#            if [[ "$HEAD_BRANCH" == release/* ]]; then
+#              VERSION=${HEAD_BRANCH#release/}
+#              echo "tag=${VERSION}-rc-${SHORT_SHA}" >> $GITHUB_OUTPUT
+#              echo "latest=false" >> $GITHUB_OUTPUT
+#              exit 0
+#            fi
+#          fi
+#
+#          # Case 2 — Push to master after merging release/*
+#          if [[ "${{ github.event_name }}" == "push" ]]; then
+#            # Try to extract source branch from merge commit message
+#            MERGE_MSG=$(git log -1 --pretty=%B)
+#            echo "Merge commit message: $MERGE_MSG"
+#
+#            if [[ "$MERGE_MSG" =~ release/([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+#              VERSION="${BASH_REMATCH[1]}"
+#              echo "tag=${VERSION}" >> $GITHUB_OUTPUT
+#              echo "latest=true" >> $GITHUB_OUTPUT
+#              exit 0
+#            fi
+#          fi
+#
+#          echo "No release context detected. Skipping Docker push."
+#          echo "tag=" >> $GITHUB_OUTPUT
+#          echo "latest=false" >> $GITHUB_OUTPUT
+#
+#      - name: Stop if not a release build
+#        if: steps.version.outputs.tag == ''
+#        run: |
+#          echo "Not a release or release candidate build. Skipping Docker image."
+#          exit 0
+#
+#      - uses: docker/setup-buildx-action@v3
+#
+#      - name: Log in to GHCR
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Build & Push
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: .
+#          push: true
+#          tags: |
+#            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+#            ${{ steps.version.outputs.latest == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
