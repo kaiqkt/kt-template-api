@@ -28,22 +28,13 @@ jobs:
           java-version: '21'
           cache: gradle
 
-      - name: Create init branch from develop
+      - name: Create init branch from master
         id: branch
         run: |
-          git fetch origin develop || true
-
-          if git show-ref --verify --quiet refs/remotes/origin/develop; then
-            BASE_BRANCH="origin/develop"
-          else
-            echo "Develop does not exist yet. Creating it from master."
-            git checkout -b develop origin/master
-            git push origin develop
-            BASE_BRANCH="develop"
-          fi
+          git fetch origin master
 
           BRANCH_NAME="chore/init-$(date +%Y%m%d%H%M%S)"
-          git checkout -b "$BRANCH_NAME" "$BASE_BRANCH"
+          git checkout -b "$BRANCH_NAME" origin/master
 
           echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
@@ -73,7 +64,7 @@ jobs:
       - name: Push init branch
         run: git push origin "${{ steps.branch.outputs.name }}"
 
-      - name: Create PR into develop
+      - name: Create PR into master
         uses: actions/github-script@v7
         with:
           script: |
@@ -85,6 +76,6 @@ jobs:
               repo,
               title: "chore: initialize project from template",
               head: branchName,
-              base: "develop",
+              base: "master",
               body: "Automatic project initialization PR created from repository template."
             });
