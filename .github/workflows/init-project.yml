@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   init:
@@ -27,6 +28,25 @@ jobs:
           java-version: '21'
           cache: gradle
 
+      - name: Create init branch from develop
+        id: branch
+        run: |
+          git fetch origin develop || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/develop; then
+            BASE_BRANCH="origin/develop"
+          else
+            echo "Develop does not exist yet. Creating it from master."
+            git checkout -b develop origin/master
+            git push origin develop
+            BASE_BRANCH="develop"
+          fi
+
+          BRANCH_NAME="chore/init-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH_NAME" "$BASE_BRANCH"
+
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
       - name: Initialize project files
         run: |
           chmod +x .github/scripts/init.sh
@@ -39,7 +59,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           git add .
-          git commit -m "Initialize project from template" || echo "Nothing to commit"
+          git commit -m "chore: initialize project from template" || echo "Nothing to commit"
 
       - name: Remove initialization workflow and scripts
         run: |
@@ -48,13 +68,23 @@ jobs:
           rm -f .github/scripts/copy-rulesets.sh
 
           git add -A
-          git commit -m "Remove initialization workflow and scripts" || echo "Nothing to commit"
+          git commit -m "chore: remove initialization workflow and scripts" || echo "Nothing to commit"
 
-      - name: Push changes to master
-        run: git push origin HEAD:master
+      - name: Push init branch
+        run: git push origin "${{ steps.branch.outputs.name }}"
 
-      - name: Create develop branch from master
-        run: |
-          git fetch origin
-          git checkout -b develop origin/master
-          git push -u origin develop
+      - name: Create PR into develop
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const branchName = "${{ steps.branch.outputs.name }}";
+
+            await github.rest.pulls.create({
+              owner,
+              repo,
+              title: "chore: initialize project from template",
+              head: branchName,
+              base: "develop",
+              body: "Automatic project initialization PR created from repository template."
+            });
