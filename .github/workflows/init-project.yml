@@ -88,10 +88,3 @@ jobs:
               base: "develop",
               body: "Automatic project initialization PR created from repository template."
             });
-
-      - name: Create develop branch from master
-        run: |
-          git fetch origin
-
-          git checkout -b develop origin/master
-          git push -u origin develop
