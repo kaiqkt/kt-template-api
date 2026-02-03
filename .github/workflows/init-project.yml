@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   init:
@@ -27,6 +28,16 @@ jobs:
           java-version: '21'
           cache: gradle
 
+      - name: Create initialization branch
+        id: branch
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          BRANCH_NAME="chore/init-$TIMESTAMP"
+
+          git checkout -b "$BRANCH_NAME"
+
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
       - name: Initialize project files
         run: |
           chmod +x .github/scripts/init.sh
@@ -39,7 +50,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           git add .
-          git commit -m "Initialize project from template" || echo "Nothing to commit"
+          git commit -m "chore: initialize project from template" || echo "Nothing to commit"
 
       - name: Remove initialization workflow and scripts
         run: |
@@ -48,7 +59,23 @@ jobs:
           rm -f .github/scripts/copy-rulesets.sh
 
           git add -A
-          git commit -m "Remove initialization workflow and scripts" || echo "Nothing to commit"
+          git commit -m "chore: remove initialization workflow and scripts" || echo "Nothing to commit"
 
-      - name: Push changes
-        run: git push origin HEAD:master
+      - name: Push initialization branch
+        run: git push origin "${{ steps.branch.outputs.name }}"
+
+      - name: Create PR into develop
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const branchName = "${{ steps.branch.outputs.name }}";
+
+            await github.rest.pulls.create({
+              owner,
+              repo,
+              title: "chore: initialize project from template",
+              head: branchName,
+              base: "develop",
+              body: "Automatic initialization PR created from repository template setup."
+            });
