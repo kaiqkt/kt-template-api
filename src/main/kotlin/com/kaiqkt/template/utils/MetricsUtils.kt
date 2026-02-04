@@ -1,4 +1,4 @@
-package ${package}.domain.utils
+package ${package}.utils
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.springframework.stereotype.Component
