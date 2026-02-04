@@ -2,10 +2,9 @@ name: Pull Request CI
 
 on:
   pull_request:
-    branches: [ develop, master ]
+    branches: [ master ]
 
 jobs:
-
   lint:
     name:  Run Kotlin Lint
     runs-on: ubuntu-latest
