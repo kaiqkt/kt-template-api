@@ -6,6 +6,7 @@ import org.slf4j.MDC
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import java.util.UUID
+import ${package}.utils.Constants.Parameters.REQUEST_ID
 
 @Component
 class WebInterceptor : HandlerInterceptor {
@@ -16,7 +17,7 @@ class WebInterceptor : HandlerInterceptor {
     ): Boolean {
         val requestId: String = request.getHeader("X-Request-Id") ?: UUID.randomUUID().toString()
 
-        MDC.put("request_id", requestId)
+        MDC.put(Constants.REQUEST_ID, requestId)
 
         return true
     }
