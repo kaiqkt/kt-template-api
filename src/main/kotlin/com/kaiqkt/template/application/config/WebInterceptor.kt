@@ -17,7 +17,7 @@ class WebInterceptor : HandlerInterceptor {
     ): Boolean {
         val requestId: String = request.getHeader("X-Request-Id") ?: UUID.randomUUID().toString()
 
-        MDC.put(Constants.REQUEST_ID, requestId)
+        MDC.put(Constants.Parameters.REQUEST_ID, requestId)
 
         return true
     }
